@@ -7,10 +7,11 @@
 #
 # Supported protocols:
 #
-# HTTP (provides http proxy):
+# HTTP (provides http/https proxy):
 #   listen = http://127.0.0.1:7777
+#   listen = https://127.0.0.1:7777
 #
-#   The generated PAC url in the above example is http://127.0.0.1:7777/pac
+#   The generated PAC url in the above example is http://127.0.0.1:7777/pac or https://127.0.0.1:7777/pac
 #
 # cow (need two cow servers to use this protocol):
 #   listen = cow://encrypt_method:password@1.2.3.4:5678
@@ -31,6 +32,12 @@ listen = http://127.0.0.1:7777
 
 # Log file path, defaults to stdout
 #logFile =
+
+# Cert file path
+#certFile = /xxx/127.0.0.1.pem
+
+# Key file path
+#keyFile = /xxx/127.0.0.1-key.pem
 
 # By default, COW only uses parent proxy if the site is blocked.
 # If the following option is true, COW will use parent proxy for all sites.

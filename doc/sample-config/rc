@@ -6,10 +6,11 @@
 #
 # 支持的 protocol 如下：
 #
-# HTTP (提供 http 代理):
+# HTTP (提供 http/https 代理):
 #   listen = http://127.0.0.1:7777
+#   listen = https://127.0.0.1:7777
 #
-#   上面的例子中，cow 生成的 PAC url 为 http://127.0.0.1:7777/pac
+#   上面的例子中，cow 生成的 PAC url 为 http://127.0.0.1:7777/pac 或 https://127.0.0.1:7777/pac
 #   配置浏览器或系统 HTTP 和 HTTPS 代理时请填入该地址
 #   若配置代理时有对所有协议使用该代理的选项，且你不清楚此选项的含义，请勾选
 #
@@ -28,6 +29,12 @@ listen = http://127.0.0.1:7777
 
 # 日志文件路径，如不指定则输出到 stdout
 #logFile =
+
+# 证书cert文件路径
+#certFile = /xxx/127.0.0.1.pem
+
+# 证书key文件路径
+#keyFile = /xxx/127.0.0.1-key.pem
 
 # COW 默认仅对被墙网站使用二级代理
 # 下面选项设置为 true 后，所有网站都通过二级代理访问
