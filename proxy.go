@@ -2,9 +2,12 @@ package main
 
 import (
 	"bytes"
+	"crypto/tls"
+	_ "crypto/tls"
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"strings"
 	"sync"
@@ -147,9 +150,23 @@ func (hp *httpProxy) Serve(wg *sync.WaitGroup, quit <-chan struct{}) {
 	defer func() {
 		wg.Done()
 	}()
-	ln, err := net.Listen("tcp", hp.addr)
+	var ln net.Listener
+	var err error
+	protocol := "http"
+	if config.isHttps {
+		protocol = "https"
+		cert, err := tls.LoadX509KeyPair(config.CertFile, config.KeyFile)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		tlsConfig := &tls.Config{Certificates: []tls.Certificate{cert}}
+		ln, err = tls.Listen("tcp", hp.addr, tlsConfig)
+	} else {
+		ln, err = net.Listen("tcp", hp.addr)
+	}
 	if err != nil {
-		fmt.Println("listen http failed:", err)
+		fmt.Sprintln("listen failed:", err)
 		return
 	}
 	var exit bool
@@ -161,18 +178,18 @@ func (hp *httpProxy) Serve(wg *sync.WaitGroup, quit <-chan struct{}) {
 	host, _, _ := net.SplitHostPort(hp.addr)
 	var pacURL string
 	if host == "" || host == "0.0.0.0" {
-		pacURL = fmt.Sprintf("http://<hostip>:%s/pac", hp.port)
+		pacURL = fmt.Sprintf("%s://<hostip>:%s/pac", protocol, hp.port)
 	} else if hp.addrInPAC == "" {
-		pacURL = fmt.Sprintf("http://%s/pac", hp.addr)
+		pacURL = fmt.Sprintf("%s://%s/pac", protocol, hp.addr)
 	} else {
-		pacURL = fmt.Sprintf("http://%s/pac", hp.addrInPAC)
+		pacURL = fmt.Sprintf("%s://%s/pac", protocol,hp.addrInPAC)
 	}
-	info.Printf("COW %s listen http %s, PAC url %s\n", version, hp.addr, pacURL)
+	info.Printf("COW %s listen %s %s, PAC url %s\n", version, protocol, hp.addr, pacURL)
 
 	for {
 		conn, err := ln.Accept()
 		if err != nil && !exit {
-			errl.Printf("http proxy(%s) accept %v\n", ln.Addr(), err)
+			errl.Printf("%s proxy(%s) accept %v\n", protocol,ln.Addr(), err)
 			if isErrTooManyOpenFd(err) {
 				connPool.CloseAll()
 			}
@@ -180,7 +197,7 @@ func (hp *httpProxy) Serve(wg *sync.WaitGroup, quit <-chan struct{}) {
 			continue
 		}
 		if exit {
-			debug.Println("exiting the http listner")
+			debug.Println("exiting the %s listner", protocol)
 			break
 		}
 		c := newClientConn(conn, hp)

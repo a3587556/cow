@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	version               = "0.9.6"
+	version               = "0.9.8"
 	defaultListenAddr     = "127.0.0.1:7777"
 	defaultEstimateTarget = "example.com"
 )
@@ -40,8 +40,13 @@ var defaultTunnelAllowedPort = []string{
 }
 
 type Config struct {
+	existCert  bool            // whether config cert
+	existKey   bool            // whether config key
+	isHttps     bool            // whether config https proxy
 	RcFile      string          // config file
 	LogFile     string          // path for log file
+	CertFile    string          // path for cert file
+	KeyFile     string          // path for key file
 	AlwaysProxy bool            // whether we should alwyas use parent proxy
 	LoadBalance LoadBalanceMode // select load balance mode
 
@@ -118,6 +123,8 @@ func parseCmdLineConfig() *Config {
 	flag.StringVar(&listenAddr, "listen", "", "listen address, disables listen in config")
 	flag.IntVar(&c.Core, "core", 2, "number of cores to use")
 	flag.StringVar(&c.LogFile, "logFile", "", "write output to file")
+	flag.StringVar(&c.CertFile, "certFile", "", "cert file path")
+	flag.StringVar(&c.KeyFile, "keyFile", "", "key file path")
 	flag.BoolVar(&c.PrintVer, "version", false, "print version")
 	flag.BoolVar(&c.EstimateTimeout, "estimate", true, "enable/disable estimate timeout")
 
@@ -302,6 +309,28 @@ func (lp listenParser) ListenCow(val string) {
 	addListenProxy(newCowProxy(method, passwd, addr))
 }
 
+func (lp listenParser) ListenHttps(val string) {
+	if cmdHasListenAddr {
+		return
+	}
+	arr := strings.Fields(val)
+	if len(arr) > 2 {
+		Fatal("too many fields in listen = https://", val)
+	}
+
+	var addr, addrInPAC string
+	addr = arr[0]
+	if len(arr) == 2 {
+		addrInPAC = arr[1]
+	}
+
+	if err := checkServerAddr(addr); err != nil {
+		Fatal("listen http server", err)
+	}
+	config.isHttps = true
+	addListenProxy(newHttpProxy(addr, addrInPAC))
+}
+
 // configParser provides functions to parse options in config file.
 type configParser struct{}
 
@@ -354,6 +383,16 @@ func (p configParser) ParseListen(val string) {
 
 func (p configParser) ParseLogFile(val string) {
 	config.LogFile = expandTilde(val)
+}
+
+func (p configParser) ParseCertFile(val string) {
+	config.existCert = true
+	config.CertFile = expandTilde(val)
+}
+
+func (p configParser) ParseKeyFile(val string) {
+	config.existKey =  true
+	config.KeyFile = expandTilde(val)
 }
 
 func (p configParser) ParseAddrInPAC(val string) {
@@ -635,6 +674,9 @@ func parseConfig(rc string, override *Config) {
 		}
 		args := []reflect.Value{reflect.ValueOf(val)}
 		method.Call(args)
+	}
+	if config.isHttps && (!config.existCert || !config.existKey) {
+		Fatal("if you want to use https, please config certFile and keyFile\n")
 	}
 	if scanner.Err() != nil {
 		Fatalf("Error reading rc file: %v\n", scanner.Err())
