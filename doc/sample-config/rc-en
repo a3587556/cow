@@ -27,6 +27,7 @@
 #	(Use this if you are using port forwarding to provide COW to external network.)
 #
 #       listen = http://127.0.0.1:7777 1.2.3.4:5678
+#       listen = https://127.0.0.1:7777 1.2.3.4:5678
 #
 listen = http://127.0.0.1:7777
 
