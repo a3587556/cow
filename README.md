@@ -31,6 +31,12 @@ COW 的设计目标是自动化，理想情况下用户无需关心哪些网站�
   - 环境变量 `COW_INSTALLDIR` 可以指定安装的路径，若该环境变量不是目录则询问用户
 - **Windows:** [点此下载](http://dl.chenyufei.info/cow/)
 - 熟悉 Go 的用户可用 `go get github.com/cyfdecyf/cow` 从源码安装
+- 或者git clone的方式源码编译安装
+1. git clone https://github.com/a3587556/cow.git
+2. go env -w GO111MODULE=on
+3. 进入项目根目录 go mod init github.com/a3587556/cow
+4. go mod tidy
+5. go build 即可在当前目录下生成cow的二进制文件
 
 编辑 `~/.cow/rc` (Linux) 或 `rc.txt` (Windows)，简单的配置例子如下：
 
