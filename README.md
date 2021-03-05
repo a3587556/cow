@@ -33,7 +33,7 @@ COW 的设计目标是自动化，理想情况下用户无需关心哪些网站�
 - 熟悉 Go 的用户可用 `go get github.com/cyfdecyf/cow` 从源码安装
 - 或者git clone的方式源码编译安装
 1. git clone https://github.com/a3587556/cow.git
-2. go env -w GO111MODULE=on
+2. go env -w GO111MODULE="on"
 3. 进入项目根目录 go mod init github.com/a3587556/cow
 4. go mod tidy
 5. go build 即可在当前目录下生成cow的二进制文件
